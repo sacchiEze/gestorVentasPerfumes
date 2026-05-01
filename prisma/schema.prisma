@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ─── Perfumes (antes StockItem) ─────────────────────────────────────────────
+model Perfume {
+  id          String   @id @default(uuid())
+  marca       String
+  nombre      String
+  precioCosto Float
+  precioVenta Float
+  stock       Int      @default(0)
+  fotoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ventaItems VentaItem[]
+}
+
+// ─── Clientes ───────────────────────────────────────────────────────────────
+model Cliente {
+  id        String   @id @default(uuid())
+  nombre    String
+  contacto  String?
+  createdAt DateTime @default(now())
+
+  ventas         Venta[]
+  pedidosEncargo PedidoEncargo[]
+}
+
+// ─── Ventas ─────────────────────────────────────────────────────────────────
+model Venta {
+  id        String   @id @default(uuid())
+  clienteId String?
+  fecha     DateTime @default(now())
+  total     Float
+
+  cliente Cliente?    @relation(fields: [clienteId], references: [id])
+  items   VentaItem[]
+  pagos   Pago[]
+}
+
+// ─── Items de Venta ─────────────────────────────────────────────────────────
+model VentaItem {
+  id        String @id @default(uuid())
+  ventaId   String
+  perfumeId String
+  cantidad  Int
+  precio    Float
+
+  venta   Venta   @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  perfume Perfume @relation(fields: [perfumeId], references: [id])
+}
+
+// ─── Pagos (abonos a ventas) ────────────────────────────────────────────────
+model Pago {
+  id      String   @id @default(uuid())
+  ventaId String
+  monto   Float
+  fecha   DateTime @default(now())
+
+  venta Venta @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+}
+
+// ─── Pedidos de Encargo ─────────────────────────────────────────────────────
+model PedidoEncargo {
+  id            String   @id @default(uuid())
+  clienteId     String
+  perfumeNombre String
+  estado        String   @default("pendiente")
+  fecha         DateTime @default(now())
+
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+}
+
+// ─── Gastos ─────────────────────────────────────────────────────────────────
+model Gasto {
+  id          String   @id @default(uuid())
+  descripcion String
+  monto       Float
+  fecha       DateTime @default(now())
+  categoria   String
+}
